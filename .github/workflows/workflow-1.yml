@@ -1,0 +1,23 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Pull docker image
+        run: docker pull ${GITHUB_REPOSITORY,,}:{GITHUB_REF##*/} || true
+      - name: Build docker image
+        run: docker build --cache-from ${GITHUB_REPOSITORY,,}:{GITHUB_REF##*/} --build-arg APP_COMMIT_ID=$(echo ${GITHUB_SHA} | cut -c1-7) -t ${GITHUB_REPOSITORY,,}:{GITHUB_REF##*/} .
+      - name: Push docker image
+        run: docker push ${GITHUB_REPOSITORY,,}:{GITHUB_REF##*/}
